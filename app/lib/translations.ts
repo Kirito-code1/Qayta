@@ -381,6 +381,7 @@ export const translations = {
     prof_stat_status: "Eco Status",
     prof_safety: "Security & Password",
     prof_logout: "Log Out",
+    market_subtitle: "Save food — get profit",
     prof_delete_btn: "Delete Account Permanently",
     prof_modal_title: "Delete Account?",
     prof_modal_desc: "This action cannot be undone.",
