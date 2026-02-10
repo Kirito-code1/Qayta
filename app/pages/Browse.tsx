@@ -34,10 +34,10 @@ function LocalProductCard({ product }: { product: Product }) {
     <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#C4E86B] hover:shadow-xl transition-all duration-500">
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         <img 
-          src={product.image_url} 
-          alt={product.title} 
-          className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" 
-        />
+  src={product.image} // Раньше могло быть product.image_url или product.img
+  alt={product.title}
+  className="w-full h-full object-cover"
+/>
         {hasDiscount && (
           <div className="absolute top-3 left-3 bg-[#C4E86B] text-[#2E2E2E] px-2 py-1 rounded-lg text-[10px] font-black shadow-sm">
             -{discount}%

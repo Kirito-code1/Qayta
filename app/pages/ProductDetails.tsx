@@ -84,7 +84,7 @@ function ProductDetailsContent() {
             className="sticky top-28"
           >
             <div className="aspect-square rounded-[2.5rem] overflow-hidden bg-white shadow-xl shadow-gray-200/50 border border-white">
-              <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+              <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
               <div className="absolute top-6 left-6 bg-[#4A7C59] text-white px-5 py-2 rounded-2xl font-black text-lg shadow-lg">
                 -{discount}%
               </div>

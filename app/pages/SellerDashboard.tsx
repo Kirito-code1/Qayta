@@ -181,10 +181,10 @@ function ProductItem({ product, onDelete }: { product: Product, onDelete: () => 
     <Card className="border-0 shadow-sm hover:shadow-md transition-all rounded-[1.5rem] overflow-hidden bg-white">
       <CardContent className="p-4 flex items-center gap-4">
         <div className="w-14 h-14 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
-          <img src={product.image_url || product.image} className="w-full h-full object-cover" alt="" />
+          <img src={product.image || product.image} className="w-full h-full object-cover" alt="" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-sm text-gray-900 truncate uppercase">{product.title || product.name}</h3>
+          <h3 className="font-bold text-sm text-gray-900 truncate uppercase">{product.title || product.title}</h3>
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">
             {product.discounted_price?.toLocaleString()} сум <span className="mx-1 text-gray-200">•</span> Сток: {product.quantity_available} шт.
           </p>
