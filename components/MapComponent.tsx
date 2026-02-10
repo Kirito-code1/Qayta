@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { differenceInDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Leaf } from "lucide-react";
 import Link from 'next/link';
 
 // Координаты по умолчанию (Ангрен)
@@ -16,7 +13,7 @@ const ANGREN_COORDS: [number, number] = [41.0167, 70.1439];
 
 // Фикс иконок Leaflet для Next.js
 const fixLeafletIcon = () => {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -39,7 +36,7 @@ function LocationFinder({ setUserLocation }: { setUserLocation: (coords: [number
   return null;
 }
 
-export default function MapComponent({ products }: { products: any[] }) {
+export default function MapComponent({ products }: { products: Array<{id: string, title: string, discounted_price: number, original_price: number, urgencyScore: number, coordinates: [number, number]}> }) {
   const [userLocation, setUserLocation] = useState<[number, number]>(ANGREN_COORDS);
 
   const getMarkerColor = (urgencyScore: number) => {

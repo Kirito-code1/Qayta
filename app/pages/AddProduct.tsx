@@ -1,97 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from "next/navigation";
-import { mockProducts, saveProductMock, Product } from "../lib/mockData";
+import React, { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { useAuth } from '@/app/lib/AuthContext'; // Импорт контекста
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ArrowLeft,
-  Upload,
-  Loader2,
-  Check
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 
-const categories = [
-  { id: "food", label: "Prepared Food" },
-  { id: "bakery", label: "Bakery" },
-  { id: "produce", label: "Fresh Produce" },
-  { id: "other", label: "Other" }
-];
-
-function AddProductForm() {
+export default function AddProductPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
-  
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    original_price: '',
-    discounted_price: '',
-    quantity_available: '',
-  });
-  
+  const { user } = useAuth(); // Достаем текущего продавца
+  const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  // Загрузка данных для редактирования
-  useEffect(() => {
-    if (editId) {
-      const product = mockProducts.find((p: Product) => p.id === editId);
-      if (product) {
-        setFormData({
-          title: product.title,
-          description: product.description || '',
-          category: product.category || '',
-          original_price: product.original_price.toString(),
-          discounted_price: product.discounted_price.toString(),
-          quantity_available: product.quantity_available.toString(),
-        });
-        setImagePreview(product.image_url);
-      }
-    }
-  }, [editId]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Имитация задержки сети
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // ПРЕОБРАЗОВАНИЕ ТИПОВ: переводим строки из формы в числа для mockData
-    saveProductMock({
-      ...formData,
-      id: editId || undefined,
-      original_price: parseFloat(formData.original_price) || 0,
-      discounted_price: parseFloat(formData.discounted_price) || 0,
-      quantity_available: parseInt(formData.quantity_available) || 0,
-      image_url: imagePreview || "https://images.unsplash.com/photo-1506617420156-8e4536971650?w=400",
-      status: 'active'
-    });
-    
-    setIsSubmitting(false);
-    setSuccess(true);
-    
-    // Перенаправление обратно в дашборд
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1500);
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,177 +23,115 @@ function AddProductForm() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return alert("Вы не авторизованы!");
+    
+    setIsLoading(true);
+    const formData = new FormData(e.currentTarget);
+    
+    // 1. Создаем объект товара
+    const productData = {
+      id: Date.now().toString(),
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      category: formData.get('category') as string,
+      original_price: Number(formData.get('original_price')),
+      discounted_price: Number(formData.get('discounted_price')),
+      quantity_available: Number(formData.get('quantity') || 1),
+      image: imagePreview || "https://images.unsplash.com/photo-1506617420156-8e4536971650?w=500",
+      sellerEmail: user.email, // КЛЮЧЕВАЯ СВЯЗКА: привязываем к продавцу
+      seller_name: user.full_name,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+
+    // 2. Сохраняем в общую базу товаров в localStorage
+    const existingProducts = JSON.parse(localStorage.getItem('eco_market_products') || '[]');
+    const updatedProducts = [...existingProducts, productData];
+    localStorage.setItem('eco_market_products', JSON.stringify(updatedProducts));
+
+    // Имитация задержки
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push('/seller/dashboard');
+    }, 1000);
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8f6f3] py-8 font-sans text-[#2D2D2D]">
-      <div className="container mx-auto px-4 max-w-2xl">
+    <div className="min-h-screen bg-[#F8F9FA] p-6 text-black">
+      <div className="max-w-3xl mx-auto">
         <button 
           onClick={() => router.back()} 
-          className="flex items-center gap-2 text-gray-500 mb-6 hover:text-[#4A7C59] transition-colors"
+          className="flex items-center gap-2 text-gray-400 mb-8 uppercase text-[10px] font-black hover:text-black transition-colors"
         >
-          <ArrowLeft size={20} /> 
-          <span className="font-medium">Назад к управлению</span>
+          <ArrowLeft size={16} /> Назад
         </button>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} 
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="border-0 shadow-xl overflow-hidden rounded-3xl">
-            <CardHeader className="bg-white border-b border-gray-50">
-              <CardTitle className="text-xl font-bold">
-                {editId ? "Редактировать товар" : "Создать новое объявление"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {success ? (
-                <div className="text-center py-12">
-                  <motion.div 
-                    initial={{ scale: 0 }} 
-                    animate={{ scale: 1 }}
-                    className="w-20 h-20 bg-green-50 text-[#4A7C59] rounded-full flex items-center justify-center mx-auto mb-6"
-                  >
-                    <Check size={40} strokeWidth={3} />
-                  </motion.div>
-                  <h2 className="text-2xl font-bold mb-2">Объявление сохранено!</h2>
-                  <p className="text-gray-500">Сейчас вы будете перенаправлены в дашборд...</p>
+        <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] p-8 md:p-12 shadow-sm border border-gray-100 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-black uppercase italic tracking-tighter">Новый товар</h1>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Заполните данные для витрины</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Фото */}
+            <div className="space-y-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Фото продукта</label>
+              <div className="relative aspect-square bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100 overflow-hidden group hover:border-[#C4E86B] cursor-pointer">
+                {imagePreview ? (
+                  <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <Upload className="text-gray-300" size={24} />
+                    <span className="text-[10px] font-black text-gray-300 uppercase">Загрузить фото</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+              </div>
+            </div>
+
+            {/* Данные */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Название</label>
+                <Input name="title" required className="h-14 rounded-2xl bg-gray-50 border-none font-bold uppercase px-6" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Старая цена</label>
+                  <Input name="original_price" type="number" required className="h-14 rounded-2xl bg-gray-50 border-none font-bold px-6" />
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Секция фото */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold uppercase tracking-wider text-gray-500">Фотография товара</Label>
-                    <div 
-                      className="aspect-[16/9] bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group hover:border-[#4A7C59] transition-all"
-                      onClick={() => document.getElementById('img-input')?.click()}
-                    >
-                      {imagePreview ? (
-                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                      ) : (
-                        <>
-                          <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <Upload className="text-[#4A7C59]" size={20} />
-                          </div>
-                          <span className="text-sm font-medium text-gray-600">Загрузить изображение</span>
-                          <span className="text-xs text-gray-400 mt-1">JPG, PNG до 5 МБ</span>
-                        </>
-                      )}
-                      <input type="file" id="img-input" hidden accept="image/*" onChange={handleImageChange} />
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Новая цена</label>
+                  <Input name="discounted_price" type="number" required className="h-14 rounded-2xl bg-[#C4E86B]/20 border-none font-black px-6" />
+                </div>
+              </div>
 
-                  {/* Основная инфа */}
-                  <div className="grid gap-5">
-                    <div className="space-y-2">
-                      <Label htmlFor="title" className="font-semibold text-gray-700">Название</Label>
-                      <Input 
-                        id="title"
-                        placeholder="Например: Сет круассанов (4 шт)" 
-                        className="rounded-xl border-gray-200 focus:ring-[#4A7C59]"
-                        value={formData.title} 
-                        onChange={e => setFormData({...formData, title: e.target.value})}
-                        required 
-                      />
-                    </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Категория</label>
+                <select name="category" className="w-full h-14 rounded-2xl bg-gray-50 px-6 font-black text-[10px] uppercase outline-none appearance-none">
+                  <option value="Выпечка">Выпечка</option>
+                  <option value="Готовая еда">Готовая еда</option>
+                  <option value="Продукты">Продукты</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="font-semibold text-gray-700">Старая цена ($)</Label>
-                        <Input 
-                          type="number" 
-                          step="0.01"
-                          placeholder="0.00" 
-                          className="rounded-xl border-gray-200"
-                          value={formData.original_price}
-                          onChange={e => setFormData({...formData, original_price: e.target.value})}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-semibold text-gray-700">Цена со скидкой ($)</Label>
-                        <Input 
-                          type="number" 
-                          step="0.01"
-                          placeholder="0.00" 
-                          className="rounded-xl border-gray-200"
-                          value={formData.discounted_price}
-                          onChange={e => setFormData({...formData, discounted_price: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="font-semibold text-gray-700">Количество</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="1" 
-                          className="rounded-xl border-gray-200"
-                          value={formData.quantity_available}
-                          onChange={e => setFormData({...formData, quantity_available: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-semibold text-gray-700">Категория</Label>
-                        <Select 
-                          value={formData.category} 
-                          onValueChange={v => setFormData({...formData, category: v})}
-                        >
-                          <SelectTrigger className="rounded-xl border-gray-200">
-                            <SelectValue placeholder="Выбрать..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map(c => (
-                              <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Описание (необязательно)</Label>
-                      <Textarea 
-                        placeholder="Опишите состояние, срок годности или состав..." 
-                        className="rounded-xl border-gray-200 min-h-[100px]"
-                        value={formData.description}
-                        onChange={e => setFormData({...formData, description: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="submit"
-                    className="w-full bg-[#4A7C59] hover:bg-[#3D6B4A] text-white py-7 rounded-2xl text-lg font-bold shadow-lg shadow-green-100 transition-all active:scale-[0.98]" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="animate-spin" />
-                        <span>Сохранение...</span>
-                      </div>
-                    ) : (
-                      editId ? "Обновить данные" : "Опубликовать объявление"
-                    )}
-                  </Button>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Описание</label>
+            <Textarea name="description" className="min-h-[120px] rounded-[2rem] bg-gray-50 border-none p-6 font-bold text-xs uppercase" />
+          </div>
+          
+          <Button disabled={isLoading} type="submit" className="w-full h-20 bg-black text-white rounded-[2rem] font-black uppercase tracking-[0.2em] hover:bg-[#4A7C59]">
+            {isLoading ? <Loader2 className="animate-spin" /> : "Опубликовать"}
+          </Button>
+        </form>
       </div>
     </div>
-  );
-}
-
-export default function AddProductPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f6f3]">
-        <Loader2 className="animate-spin text-[#4A7C59] w-10 h-10" />
-      </div>
-    }>
-      <AddProductForm />
-    </Suspense>
   );
 }

@@ -2,96 +2,96 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { getStoredUser, UserProfile } from './mockData';
 
-// Интерфейс, который теперь СТРОГО соответствует твоему Layout
-interface AuthContextType {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  isLoadingAuth: boolean;
-  logout: () => void;
-  login: () => void;
-  refreshAuth: () => void; // Теперь название совпадает!
-  updateUser: (newData: Partial<UserProfile>) => void;
-  deleteAccount: () => void;
-}
+const AuthContext = createContext<any>(undefined);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AUTH_KEY = 'eco_market_auth_data';
+const SESSION_KEY = 'eco_market_current_session'; 
+const DB_KEY = 'eco_market_users_db'; // Ключ нашей "базы данных"
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
 
-  // Функция обновления состояния (теперь называется refreshAuth)
-  const refreshAuth = () => {
-    setIsLoadingAuth(true);
-    const localUser = getStoredUser();
-    if (localUser) {
-      setUser(localUser);
-      setIsAuthenticated(true);
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
+  useEffect(() => {
+    const session = localStorage.getItem(SESSION_KEY);
+    if (session) {
+      try {
+        const parsedUser = JSON.parse(session);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (e) {
+        localStorage.removeItem(SESSION_KEY);
+      }
     }
     setIsLoadingAuth(false);
-  };
-
-  useEffect(() => {
-    refreshAuth();
   }, []);
 
-  const login = () => {
-    refreshAuth();
-  };
-
-  const updateUser = (newData: Partial<UserProfile>) => {
-    const currentData = getStoredUser();
-    if (!currentData) return;
-    
-    const updatedUser = { ...currentData, ...newData };
-    setUser(updatedUser);
-    localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
+  const login = (userData: any) => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(SESSION_KEY);
     setUser(null);
     setIsAuthenticated(false);
     router.push('/login');
   };
 
+  // ОБНОВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ
   const deleteAccount = () => {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem('eco_market_products');
+    if (!user) return;
+
+    // 1. Достаем всех пользователей
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+
+    // 2. Удаляем текущего пользователя из массива по email
+    const updatedDb = db.filter((u: any) => u.email !== user.email);
+
+    // 3. Сохраняем обновленный список обратно в базу
+    localStorage.setItem(DB_KEY, JSON.stringify(updatedDb));
+
+    // 4. Очищаем сессию и сбрасываем состояние
+    localStorage.removeItem(SESSION_KEY);
     setUser(null);
     setIsAuthenticated(false);
-    router.push('/');
+
+    // 5. Уводим на главную
+    window.location.href = '/';
+  };
+
+  const updateUser = (newData: Partial<any>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...newData };
+    
+    // Обновляем в сессии
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+    
+    // Обновляем в базе данных
+    const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
+    const updatedDb = db.map((u: any) => u.email === user.email ? updatedUser : u);
+    localStorage.setItem(DB_KEY, JSON.stringify(updatedDb));
+
+    setUser(updatedUser);
   };
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated, 
-      isLoadingAuth,
-      logout,
-      login,
-      refreshAuth, // Передаем её в провайдер
-      updateUser,
-      deleteAccount
+      isLoadingAuth, 
+      login, 
+      logout, 
+      deleteAccount, 
+      updateUser 
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

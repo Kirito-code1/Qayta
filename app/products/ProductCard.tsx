@@ -10,28 +10,7 @@ import { Clock, MapPin, Store, Percent, LucideIcon } from "lucide-react";
 // Импортируем ваши UI компоненты
 import { Badge } from "@/components/ui/badge";
 
-// Определение типов для причин скидок
-type DiscountReason = 
-  | "expiring_soon" 
-  | "damaged_packaging" 
-  | "overstock" 
-  | "outdated_collection" 
-  | "seasonal" 
-  | "other";
-
-// Описание интерфейса продукта
-interface Product {
-  id: string | number;
-  title: string;
-  original_price: number;
-  discounted_price: number;
-  image_url?: string;
-  expiration_date?: string | Date;
-  quantity_available: number;
-  discount_reason: DiscountReason;
-  seller_name: string;
-  location?: string;
-}
+import { Product, DiscountReason } from "../lib/mockData";
 
 interface ProductCardProps {
   product: Product;

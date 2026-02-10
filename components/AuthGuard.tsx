@@ -10,12 +10,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (!mockUser) {
-      // Если аккаунта нет — отправляем на регистрацию
-      router.replace('/register');
-    } else {
-      setIsChecking(false);
-    }
+    const checkAuth = () => {
+      if (!mockUser) {
+        // Если аккаунта нет — отправляем на регистрацию
+        router.replace('/register');
+      } else {
+        setIsChecking(false);
+      }
+    };
+
+    checkAuth();
   }, [router]);
 
   if (isChecking) {

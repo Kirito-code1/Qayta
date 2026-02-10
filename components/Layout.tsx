@@ -46,7 +46,6 @@ export default function Layout({ children }: LayoutProps) {
   
   const { 
     t, 
-    language, 
     setLanguage, 
     availableLanguages, 
     availableLanguagesLong 
