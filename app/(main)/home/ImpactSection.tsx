@@ -3,23 +3,25 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { Leaf, Droplets, DollarSign, Recycle, LucideIcon } from "lucide-react";
+import { useLanguage } from '@/app/lib/LanguageContext';
 
-// Интерфейс для данных статистики
 interface StatItem {
   icon: LucideIcon;
   value: string;
-  label: string;
-  sublabel: string;
+  labelKey: any; // Ключи перевода
+  sublabelKey: any;
 }
 
 const stats: StatItem[] = [
-  { icon: Recycle, value: "50K+", label: "Products Saved", sublabel: "From going to waste" },
-  { icon: DollarSign, value: "$2M+", label: "Customer Savings", sublabel: "Total money saved" },
-  { icon: Droplets, value: "100K", label: "Liters of Water", sublabel: "Conserved" },
-  { icon: Leaf, value: "25 tons", label: "CO₂ Prevented", sublabel: "Carbon footprint reduced" }
+  { icon: Recycle, value: "50K+", labelKey: "stat_prod_label", sublabelKey: "stat_prod_sub" },
+  { icon: DollarSign, value: "$2M+", labelKey: "stat_save_label", sublabelKey: "stat_save_sub" },
+  { icon: Droplets, value: "100K", labelKey: "stat_water_label", sublabelKey: "stat_water_sub" },
+  { icon: Leaf, value: "25 t", labelKey: "stat_co2_label", sublabelKey: "stat_co2_sub" }
 ];
 
 export default function ImpactSection() {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-[#4A7C59] relative overflow-hidden">
       {/* Декоративный фоновый паттерн */}
@@ -37,11 +39,11 @@ export default function ImpactSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              Together, We Make a Difference
+            <h2 className="text-3xl md:text-5xl font-black italic uppercase text-white mb-4 tracking-tighter">
+              {t('impact_title')}
             </h2>
-            <p className="text-white/80 text-lg max-w-2xl mx-auto">
-              Every purchase on our platform contributes to a more sustainable future
+            <p className="text-white/70 font-black uppercase text-[10px] tracking-[0.2em] max-w-2xl mx-auto">
+              {t('impact_subtitle')}
             </p>
           </motion.div>
         </div>
@@ -58,20 +60,23 @@ export default function ImpactSection() {
                 stiffness: 100 
               }}
               viewport={{ once: true }}
-              className="group bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center border border-white/20 hover:bg-white/15 transition-colors"
+              className="group bg-white/10 backdrop-blur-md rounded-[2.5rem] p-8 text-center border border-white/20 hover:bg-white/15 transition-all duration-300"
             >
-              {/* Контейнер иконки с легкой анимацией при наведении на карточку */}
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-white/20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 group-hover:rotate-6 transition-transform duration-300">
                 <stat.icon className="w-8 h-8 text-white" />
               </div>
               
-              <p className="text-4xl md:text-5xl font-bold text-white mb-2 tabular-nums">
+              <p className="text-4xl md:text-5xl font-black text-white mb-4 tabular-nums tracking-tighter">
                 {stat.value}
               </p>
               
-              <div className="space-y-1">
-                <p className="text-white font-semibold text-lg">{stat.label}</p>
-                <p className="text-white/60 text-sm leading-relaxed">{stat.sublabel}</p>
+              <div className="space-y-2">
+                <p className="text-white font-black uppercase text-[12px] tracking-widest leading-none">
+                  {t(stat.labelKey)}
+                </p>
+                <p className="text-white/50 font-bold uppercase text-[8px] tracking-[0.15em] leading-relaxed">
+                  {t(stat.sublabelKey)}
+                </p>
               </div>
             </motion.div>
           ))}

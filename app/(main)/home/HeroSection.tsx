@@ -1,11 +1,16 @@
+"use client";
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Leaf, ShoppingBag, TrendingDown } from "lucide-react";
 import Link from 'next/link';
 import { createPageUrl } from "../../utils/index";
 import { motion } from "framer-motion";
+import { useLanguage } from '@/app/lib/LanguageContext'; // Импортируем наш хук
 
 export default function HeroSection() {
+  const { t } = useLanguage(); // Используем функцию перевода
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#f8f6f3] via-white to-[#e8f5e9] min-h-[85vh] flex items-center">
       {/* Decorative elements */}
@@ -21,29 +26,28 @@ export default function HeroSection() {
           >
             <div className="inline-flex items-center gap-2 bg-[#4A7C59]/10 text-[#4A7C59] px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Leaf className="w-4 h-4" />
-              Save food, save money, save the planet
+              {t('hero_badge')}
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
-              Great products,
-              <span className="text-[#4A7C59]"> tiny prices</span>
+              {t('hero_title_1')}
+              <span className="text-[#4A7C59]">{t('hero_title_2')}</span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 max-w-lg leading-relaxed">
-              Discover amazing deals on quality products from local stores. 
-              Reduce waste while saving up to 70% on food and goods.
+              {t('hero_subtitle')}
             </p>
             
             <div className="flex flex-wrap gap-4">
               <Link href={createPageUrl("browse")}>
                 <Button size="lg" className="bg-[#4A7C59] hover:bg-[#3d6b4a] text-white px-8 py-6 text-lg rounded-full shadow-lg shadow-[#4A7C59]/25 transition-all hover:scale-105">
                   <ShoppingBag className="w-5 h-5 mr-2" />
-                  Start Shopping
+                  {t('hero_btn_start')}
                 </Button>
               </Link>
               <Link href={createPageUrl("profile")}>
                 <Button size="lg" variant="outline" className="border-2 border-gray-200 px-8 py-6 text-lg rounded-full hover:bg-gray-50 transition-all">
-                  Sell Your Products
+                  {t('hero_btn_sell')}
                 </Button>
               </Link>
             </div>
@@ -51,15 +55,15 @@ export default function HeroSection() {
             <div className="flex items-center gap-8 mt-12 pt-8 border-t border-gray-100">
               <div>
                 <p className="text-3xl font-bold text-gray-900">50K+</p>
-                <p className="text-gray-500 text-sm">Products saved</p>
+                <p className="text-gray-500 text-sm">{t('hero_stat_saved')}</p>
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900">2K+</p>
-                <p className="text-gray-500 text-sm">Happy sellers</p>
+                <p className="text-gray-500 text-sm">{t('hero_stat_sellers')}</p>
               </div>
               <div>
                 <p className="text-3xl font-bold text-[#4A7C59]">70%</p>
-                <p className="text-gray-500 text-sm">Avg. savings</p>
+                <p className="text-gray-500 text-sm">{t('hero_stat_avg')}</p>
               </div>
             </div>
           </motion.div>
@@ -88,8 +92,8 @@ export default function HeroSection() {
                   <TrendingDown className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">60% OFF</p>
-                  <p className="text-sm text-gray-500">Organic bread</p>
+                  <p className="font-semibold text-gray-900">60% {t('hero_card_off')}</p>
+                  <p className="text-sm text-gray-500">{t('hero_card_item')}</p>
                 </div>
               </motion.div>
               
@@ -103,9 +107,9 @@ export default function HeroSection() {
                   <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
                     <Leaf className="w-4 h-4 text-amber-600" />
                   </div>
-                  <span className="text-sm font-medium">Eco Impact</span>
+                  <span className="text-sm font-medium">{t('hero_card_impact')}</span>
                 </div>
-                <p className="text-2xl font-bold text-[#4A7C59]">12 tons</p>
+                <p className="text-2xl font-bold text-[#4A7C59]">12 {t('hero_card_tons')}</p>
                 <p className="text-xs text-gray-500">Food saved this week</p>
               </motion.div>
             </div>

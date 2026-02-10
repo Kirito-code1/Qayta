@@ -1,136 +1,153 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from "next/navigation";
-import { useAuth } from '@/app/lib/AuthContext'; // Импорт контекста
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/app/lib/LanguageContext';
+import { getAllProducts } from '@/app/lib/mockData';
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Search, 
+  Filter, 
+  MapPin, 
+  ShoppingBag, 
+  ChevronRight, 
+  LayoutGrid,
+  List
+} from "lucide-react";
 
-export default function AddProductPage() {
-  const router = useRouter();
-  const { user } = useAuth(); // Достаем текущего продавца
-  const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+export default function BrowsePage() {
+  const { t } = useLanguage();
+  const [products, setProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+  // Загрузка товаров
+  useEffect(() => {
+    const data = getAllProducts();
+    setProducts(data);
+    setFilteredProducts(data);
+  }, []);
+
+  // Логика фильтрации
+  useEffect(() => {
+    let result = products;
+
+    if (activeCategory !== "all") {
+      result = result.filter(p => p.category === activeCategory);
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!user) return alert("Вы не авторизованы!");
-    
-    setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
-    
-    // 1. Создаем объект товара
-    const productData = {
-      id: Date.now().toString(),
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      category: formData.get('category') as string,
-      original_price: Number(formData.get('original_price')),
-      discounted_price: Number(formData.get('discounted_price')),
-      quantity_available: Number(formData.get('quantity') || 1),
-      image: imagePreview || "https://images.unsplash.com/photo-1506617420156-8e4536971650?w=500",
-      sellerEmail: user.email, // КЛЮЧЕВАЯ СВЯЗКА: привязываем к продавцу
-      seller_name: user.full_name,
-      status: 'active',
-      createdAt: new Date().toISOString()
-    };
+    if (searchQuery) {
+      result = result.filter(p => 
+        p.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
-    // 2. Сохраняем в общую базу товаров в localStorage
-    const existingProducts = JSON.parse(localStorage.getItem('eco_market_products') || '[]');
-    const updatedProducts = [...existingProducts, productData];
-    localStorage.setItem('eco_market_products', JSON.stringify(updatedProducts));
+    setFilteredProducts(result);
+  }, [searchQuery, activeCategory, products]);
 
-    // Имитация задержки
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push('/seller/dashboard');
-    }, 1000);
-  };
+  const categories = ["all", "bakery", "fruits", "dairy", "ready"];
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6 text-black">
-      <div className="max-w-3xl mx-auto">
-        <button 
-          onClick={() => router.back()} 
-          className="flex items-center gap-2 text-gray-400 mb-8 uppercase text-[10px] font-black hover:text-black transition-colors"
-        >
-          <ArrowLeft size={16} /> Назад
-        </button>
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] p-8 md:p-12 shadow-sm border border-gray-100 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter">Новый товар</h1>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Заполните данные для витрины</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {/* Фото */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Фото продукта</label>
-              <div className="relative aspect-square bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100 overflow-hidden group hover:border-[#C4E86B] cursor-pointer">
-                {imagePreview ? (
-                  <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full gap-3">
-                    <Upload className="text-gray-300" size={24} />
-                    <span className="text-[10px] font-black text-gray-300 uppercase">Загрузить фото</span>
-                  </div>
-                )}
-                <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
-              </div>
-            </div>
-
-            {/* Данные */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Название</label>
-                <Input name="title" required className="h-14 rounded-2xl bg-gray-50 border-none font-bold uppercase px-6" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Старая цена</label>
-                  <Input name="original_price" type="number" required className="h-14 rounded-2xl bg-gray-50 border-none font-bold px-6" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Новая цена</label>
-                  <Input name="discounted_price" type="number" required className="h-14 rounded-2xl bg-[#C4E86B]/20 border-none font-black px-6" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Категория</label>
-                <select name="category" className="w-full h-14 rounded-2xl bg-gray-50 px-6 font-black text-[10px] uppercase outline-none appearance-none">
-                  <option value="Выпечка">Выпечка</option>
-                  <option value="Готовая еда">Готовая еда</option>
-                  <option value="Продукты">Продукты</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
+    <div className="min-h-screen bg-[#FBFBFB] pt-24 pb-20 px-4 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Шапка Маркета */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Описание</label>
-            <Textarea name="description" className="min-h-[120px] rounded-[2rem] bg-gray-50 border-none p-6 font-bold text-xs uppercase" />
+            <h1 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
+              {t('market_title')}
+            </h1>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">
+              {t('dash_subtitle')}
+            </p>
           </div>
-          
-          <Button disabled={isLoading} type="submit" className="w-full h-20 bg-black text-white rounded-[2rem] font-black uppercase tracking-[0.2em] hover:bg-[#4A7C59]">
-            {isLoading ? <Loader2 className="animate-spin" /> : "Опубликовать"}
-          </Button>
-        </form>
+
+          {/* Поиск */}
+          <div className="relative w-full md:w-96 group">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#4A7C59] transition-colors" size={20} />
+            <Input 
+              placeholder={t('market_search')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-16 pl-16 pr-8 rounded-2xl bg-white border-none shadow-sm font-bold uppercase text-[10px] tracking-widest focus-visible:ring-2 ring-[#C4E86B] transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Фильтры по категориям */}
+        <div className="flex flex-wrap gap-3 mb-12">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${
+                activeCategory === cat 
+                ? "bg-black text-white shadow-xl shadow-black/10 scale-105" 
+                : "bg-white text-gray-400 border border-gray-100 hover:border-[#C4E86B] hover:text-black"
+              }`}
+            >
+              {cat === "all" ? t('market_filter_all') : (t('categories') as any)[cat]}
+            </button>
+          ))}
+        </div>
+
+        {/* Сетка товаров */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="group bg-white rounded-[2.5rem] p-4 border border-gray-100 hover:shadow-2xl hover:shadow-black/5 transition-all duration-500">
+                {/* Изображение */}
+                <div className="relative h-64 rounded-[2rem] overflow-hidden mb-6">
+                  <img 
+                    src={product.image} 
+                    alt={product.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-sm">
+                    {(t('categories') as any)[product.category] || product.category}
+                  </div>
+                </div>
+
+                {/* Инфо */}
+                <div className="px-2 pb-2">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-black uppercase text-sm tracking-tight leading-tight max-w-[70%]">
+                      {product.title}
+                    </h3>
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-300 line-through font-bold">
+                        {Number(product.original_price).toLocaleString()}
+                      </p>
+                      <p className="text-lg font-black text-[#4A7C59] tracking-tighter italic">
+                        {Number(product.discounted_price).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest mb-6">
+                    <MapPin size={12} className="text-[#C4E86B]" />
+                    {product.location} <span className="opacity-30">•</span> 1.2 км {t('market_distance')}
+                  </div>
+
+                  <Button className="w-full h-14 bg-black text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#4A7C59] transition-all flex items-center gap-3 active:scale-95">
+                    <ShoppingBag size={16} />
+                    {t('market_buy_btn')}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-40 text-center">
+            <div className="flex flex-col items-center gap-6 opacity-20">
+              <ShoppingBag size={80} strokeWidth={1} />
+              <p className="font-black uppercase text-sm tracking-[0.4em]">
+                {t('market_no_products')}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

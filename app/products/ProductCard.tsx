@@ -58,9 +58,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         className="group block bg-white rounded-3xl overflow-hidden border border-gray-100 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 hover:-translate-y-1"
       >
         <div className="relative aspect-square overflow-hidden bg-gray-100">
-          {product.image_url ? (
+          {product.image ? (
             <Image
-              src={product.image_url}
+              src={product.image}
               alt={product.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

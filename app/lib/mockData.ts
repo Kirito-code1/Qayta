@@ -14,7 +14,8 @@ export interface Product {
   id: string;
   coordinates?: [number, number];
   title: string;
-  description?: string;
+  description?: string;location?: string; 
+  created_at?: string;
   category: string;
   original_price: number;
   discounted_price: number;

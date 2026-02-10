@@ -3,43 +3,45 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { Search, ShoppingCart, Smile, Leaf, LucideIcon } from "lucide-react";
+import { useLanguage } from '@/app/lib/LanguageContext';
 
-// Типизация для шага
 interface Step {
   icon: LucideIcon;
-  title: string;
-  description: string;
+  titleKey: any; // Ключ для заголовка
+  descKey: any;  // Ключ для описания
   color: string;
 }
 
 const steps: Step[] = [
   {
     icon: Search,
-    title: "Discover Deals",
-    description: "Browse products from local stores, restaurants, and brands at discounted prices.",
+    titleKey: "step1_title",
+    descKey: "step1_desc",
     color: "bg-blue-100 text-blue-600"
   },
   {
     icon: ShoppingCart,
-    title: "Place Your Order",
-    description: "Reserve your items online and choose pickup or delivery options.",
+    titleKey: "step2_title",
+    descKey: "step2_desc",
     color: "bg-purple-100 text-purple-600"
   },
   {
     icon: Smile,
-    title: "Enjoy & Save",
-    description: "Get quality products at a fraction of the price. More money in your pocket!",
+    titleKey: "step3_title",
+    descKey: "step3_desc",
     color: "bg-amber-100 text-amber-600"
   },
   {
     icon: Leaf,
-    title: "Make an Impact",
-    description: "Every purchase helps reduce waste and supports sustainable consumption.",
+    titleKey: "step4_title",
+    descKey: "step4_desc",
     color: "bg-green-100 text-green-600"
   }
 ];
 
 export default function HowItWorks() {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4">
@@ -48,18 +50,18 @@ export default function HowItWorks() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            className="text-3xl md:text-4xl font-black uppercase italic text-gray-900 mb-4"
           >
-            How It Works
+            {t('how_title')}
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             viewport={{ once: true }}
-            className="text-gray-600 max-w-2xl mx-auto"
+            className="text-gray-400 font-black uppercase text-[10px] tracking-widest max-w-2xl mx-auto"
           >
-            Join thousands of smart shoppers saving money while helping the planet
+            {t('how_subtitle')}
           </motion.p>
         </div>
         
@@ -73,27 +75,27 @@ export default function HowItWorks() {
               viewport={{ once: true }}
               className="relative"
             >
-              {/* Линия-коннектор (только для десктопа) */}
+              {/* Линия-коннектор */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gray-100" aria-hidden="true" />
+                <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gray-50" aria-hidden="true" />
               )}
               
-              <div className="relative text-center z-10">
+              <div className="relative text-center z-10 group">
                 {/* Иконка */}
-                <div className={`w-24 h-24 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl transform group-hover:rotate-6 transition-transform`}>
+                <div className={`w-24 h-24 ${step.color} rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:rotate-6 transition-all duration-300`}>
                   <step.icon className="w-10 h-10" />
                 </div>
 
                 {/* Порядковый номер */}
-                <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 bg-[#4A7C59] text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md border-2 border-white">
+                <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 bg-black text-white rounded-xl flex items-center justify-center text-xs font-black shadow-lg border-2 border-white">
                   {index + 1}
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {step.title}
+                <h3 className="text-sm font-black uppercase tracking-tighter text-gray-900 mb-3">
+                  {t(step.titleKey)}
                 </h3>
-                <p className="text-gray-600 leading-relaxed px-4 md:px-0">
-                  {step.description}
+                <p className="text-gray-500 text-[10px] font-bold uppercase leading-relaxed px-4 md:px-0 tracking-tight">
+                  {t(step.descKey)}
                 </p>
               </div>
             </motion.div>
