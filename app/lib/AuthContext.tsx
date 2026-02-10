@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation';
 const AuthContext = createContext<any>(undefined);
 
 const SESSION_KEY = 'eco_market_current_session'; 
-const DB_KEY = 'eco_market_users_db'; // Ключ нашей "базы данных"
+const DB_KEY = 'eco_market_users_db'; 
+// Имя куки должно совпадать с тем, что ты указал в middleware.ts
+const COOKIE_NAME = 'eco_market_users_db'; 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -14,6 +16,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const router = useRouter();
 
+  // Синхронизация состояния при загрузке
   useEffect(() => {
     const session = localStorage.getItem(SESSION_KEY);
     if (session) {
@@ -28,38 +31,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoadingAuth(false);
   }, []);
 
+  // Вспомогательная функция для куки (чтобы middleware видел сессию)
+  const setAuthCookie = (value: string, days: number) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${COOKIE_NAME}=${value}; expires=${expires}; path=/`;
+  };
+
+  const deleteAuthCookie = () => {
+    document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  };
+
   const login = (userData: any) => {
+    // 1. Сохраняем в localStorage для клиента
     localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+    // 2. Ставим куку для Middleware (сервера)
+    setAuthCookie('true', 7); 
+    
     setUser(userData);
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem(SESSION_KEY);
+    deleteAuthCookie(); // Удаляем куку, чтобы Middleware снова блокировал доступ
     setUser(null);
     setIsAuthenticated(false);
     router.push('/login');
   };
 
-  // ОБНОВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ
   const deleteAccount = () => {
     if (!user) return;
 
-    // 1. Достаем всех пользователей
     const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
-
-    // 2. Удаляем текущего пользователя из массива по email
     const updatedDb = db.filter((u: any) => u.email !== user.email);
-
-    // 3. Сохраняем обновленный список обратно в базу
     localStorage.setItem(DB_KEY, JSON.stringify(updatedDb));
 
-    // 4. Очищаем сессию и сбрасываем состояние
     localStorage.removeItem(SESSION_KEY);
+    deleteAuthCookie(); // Важно удалить и куку тоже
+    
     setUser(null);
     setIsAuthenticated(false);
-
-    // 5. Уводим на главную
     window.location.href = '/';
   };
 
@@ -68,10 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     const updatedUser = { ...user, ...newData };
     
-    // Обновляем в сессии
     localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
     
-    // Обновляем в базе данных
     const db = JSON.parse(localStorage.getItem(DB_KEY) || '[]');
     const updatedDb = db.map((u: any) => u.email === user.email ? updatedUser : u);
     localStorage.setItem(DB_KEY, JSON.stringify(updatedDb));

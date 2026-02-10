@@ -12,6 +12,7 @@ export type DiscountReason =
 
 export interface Product {
   id: string;
+  coordinates?: [number, number];
   title: string;
   description?: string;
   category: string;

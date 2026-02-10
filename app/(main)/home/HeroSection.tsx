@@ -35,13 +35,13 @@ export default function HeroSection() {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              <Link href={createPageUrl("Browse")}>
+              <Link href={createPageUrl("browse")}>
                 <Button size="lg" className="bg-[#4A7C59] hover:bg-[#3d6b4a] text-white px-8 py-6 text-lg rounded-full shadow-lg shadow-[#4A7C59]/25 transition-all hover:scale-105">
                   <ShoppingBag className="w-5 h-5 mr-2" />
                   Start Shopping
                 </Button>
               </Link>
-              <Link href={createPageUrl("BecomeASeller")}>
+              <Link href={createPageUrl("profile")}>
                 <Button size="lg" variant="outline" className="border-2 border-gray-200 px-8 py-6 text-lg rounded-full hover:bg-gray-50 transition-all">
                   Sell Your Products
                 </Button>
